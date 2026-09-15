@@ -238,8 +238,9 @@ def main():
             fator = ACELERACAO_FALLBACK
             log(f"Não consegui medir a duração do vídeo -- usando aceleração padrão {fator}x.")
 
-        nome_job = (estado.get("nome_job") or "impressao").replace(" ", "_")
-        destino_final = NAS_DIR / f"{nome_job}_{int(time.time())}_timelapse.mp4"
+        nome_job = estado.get("nome_job") or "impressao"
+        timestamp = time.strftime("%Y%m%d_%H%M")
+        destino_final = NAS_DIR / f"{timestamp}_timelapse.mp4"
 
         log(f"Acelerando ({fator}x) e salvando em {destino_final}.")
         resultado = subprocess.run(
@@ -254,7 +255,7 @@ def main():
                    and destino_final.stat().st_size > 0)
 
         if sucesso:
-            log(f"Timelapse salvo no NAS com sucesso. Bruto arquivado em {bruto}. "
+            log(f"Timelapse salvo no NAS com sucesso ({nome_job}). Bruto arquivado em {bruto}. "
                 "Apagando o vídeo do celular pra liberar espaço lá.")
             apaga_do_ftp(nome)
         else:
