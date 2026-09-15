@@ -1,0 +1,21 @@
+{
+  "mqtt_host": "IP_DA_IMPRESSORA",
+  "mqtt_port": 8883,
+  "mqtt_user": "bblp",
+  "mqtt_access_code": "CODIGO_DE_ACESSO_DA_IMPRESSORA",
+  "mqtt_serial": "NUMERO_DE_SERIE_DA_IMPRESSORA",
+
+  "celular_http_base": "http://IP_DO_CELULAR:8080",
+
+  "ftp_host": "IP_DO_CELULAR",
+  "ftp_port": 2221,
+  "ftp_user": "USUARIO_FTP_DO_CELULAR",
+  "ftp_pass": "SENHA_FTP_DO_CELULAR",
+  "ftp_dir": "/IP Webcam",
+
+  "local_tmp": "/mnt/nas/Ricardo/timelapse/bruto",
+  "nas_dir": "/mnt/nas/Ricardo/timelapse",
+  "aceleracao": 30,
+
+  "state_path": "/var/lib/bambu-timelapse/estado.json"
+}
