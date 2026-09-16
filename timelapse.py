@@ -70,7 +70,7 @@ def log(msg):
 def le_estado():
     if STATE_PATH.exists():
         return json.loads(STATE_PATH.read_text())
-    return {"gravando": False, "nome_arquivo": None, "nome_job": None}
+    return {"gravando": False, "nome_arquivo": None, "nome_job": None, "ignorada": False}
 
 
 def salva_estado(estado):
@@ -195,9 +195,19 @@ def main():
 
     gcode_state = status.get("gcode_state")
     subtask_name = status.get("subtask_name", "impressao")
+    ipcam = status.get("ipcam") or {}
+    timelapse_valor = ipcam.get("timelapse")  # "enable" / "disable", vem do fatiador
 
     # --- início de impressão ---
-    if gcode_state == "RUNNING" and not estado["gravando"]:
+    if gcode_state == "RUNNING" and not estado["gravando"] and not estado.get("ignorada"):
+        if timelapse_valor == "disable":
+            log(f"Timelapse desativado no fatiador pra essa impressão ({subtask_name}) -- não vou gravar.")
+            salva_estado({"gravando": False, "nome_arquivo": None, "nome_job": None, "ignorada": True})
+            return
+        if timelapse_valor != "enable":
+            log("Ainda não recebi o status do timelapse do fatiador -- aguardando próxima checagem.")
+            return  # não marca nada -- tenta de novo no próximo tick
+
         log(f"Impressão iniciada ({subtask_name}). Iniciando gravação no celular.")
         resposta = requests.post(f"{CELULAR_BASE}/startvideo?force=1", timeout=5)
         nome_arquivo = None
@@ -209,7 +219,12 @@ def main():
             log(f"Celular confirmou gravação de '{nome_arquivo}'.")
         else:
             log("startvideo não devolveu o nome do arquivo -- confere se a gravação começou mesmo.")
-        salva_estado({"gravando": True, "nome_arquivo": nome_arquivo, "nome_job": subtask_name})
+        salva_estado({"gravando": True, "nome_arquivo": nome_arquivo, "nome_job": subtask_name, "ignorada": False})
+        return
+
+    # --- impressão sem gravação (timelapse desligado no fatiador) terminou -- reseta pra próxima ---
+    if gcode_state != "RUNNING" and estado.get("ignorada"):
+        salva_estado({"gravando": False, "nome_arquivo": None, "nome_job": None, "ignorada": False})
         return
 
     # --- fim de impressão ---
@@ -220,14 +235,14 @@ def main():
         nome = estado.get("nome_arquivo")
         if not nome:
             log("Não tinha o nome do arquivo salvo (startvideo pode ter falhado) -- confere manualmente.")
-            salva_estado({"gravando": False, "nome_arquivo": None, "nome_job": None})
+            salva_estado({"gravando": False, "nome_arquivo": None, "nome_job": None, "ignorada": False})
             return
 
         log(f"Esperando '{nome}' ficar pronto e baixando do celular.")
         bruto = espera_e_baixa_do_ftp(nome)
         if not bruto:
             log(f"'{nome}' não apareceu no FTP do celular a tempo -- confere manualmente.")
-            salva_estado({"gravando": False, "nome_arquivo": None, "nome_job": None})
+            salva_estado({"gravando": False, "nome_arquivo": None, "nome_job": None, "ignorada": False})
             return
 
         duracao = duracao_video_segundos(bruto)
@@ -263,7 +278,7 @@ def main():
                 "Vídeo bruto continua em " + str(bruto) + " pra investigar.")
             log(resultado.stderr.decode(errors="ignore")[-2000:])
 
-        salva_estado({"gravando": False, "nome_arquivo": None, "nome_job": None})
+        salva_estado({"gravando": False, "nome_arquivo": None, "nome_job": None, "ignorada": False})
         return
 
     # nenhuma transição relevante nessa execução -- não faz nada
