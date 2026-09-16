@@ -210,6 +210,8 @@ def main():
 
         log(f"Impressão iniciada ({subtask_name}). Iniciando gravação no celular.")
         requests.post(f"{CELULAR_BASE}/enabletorch", timeout=5)
+        requests.post(f"{CELULAR_BASE}/focus", timeout=5)
+        time.sleep(2)  # dá tempo do foco assentar antes de começar a gravar
         resposta = requests.post(f"{CELULAR_BASE}/startvideo?force=1", timeout=5)
         nome_arquivo = None
         try:
