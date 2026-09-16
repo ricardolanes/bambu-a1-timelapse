@@ -260,7 +260,7 @@ def main():
         log(f"Acelerando ({fator}x) e salvando em {destino_final}.")
         resultado = subprocess.run(
             ["ffmpeg", "-y", "-i", str(bruto),
-             "-vf", f"setpts=PTS/{fator},scale=1920:1080:flags=lanczos",
+             "-vf", f"setpts=PTS/{fator},scale=1920:1080:flags=lanczos,unsharp=5:5:0.8:5:5:0.0",
              "-an", str(destino_final)],
             capture_output=True,
         )
