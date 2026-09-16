@@ -209,6 +209,7 @@ def main():
             return  # não marca nada -- tenta de novo no próximo tick
 
         log(f"Impressão iniciada ({subtask_name}). Iniciando gravação no celular.")
+        requests.post(f"{CELULAR_BASE}/enabletorch", timeout=5)
         resposta = requests.post(f"{CELULAR_BASE}/startvideo?force=1", timeout=5)
         nome_arquivo = None
         try:
@@ -231,6 +232,7 @@ def main():
     if gcode_state != "RUNNING" and estado["gravando"]:
         log(f"Impressão terminou (estado: {gcode_state}). Parando gravação.")
         requests.post(f"{CELULAR_BASE}/stopvideo?force=1", timeout=5)
+        requests.post(f"{CELULAR_BASE}/disabletorch", timeout=5)
 
         nome = estado.get("nome_arquivo")
         if not nome:
